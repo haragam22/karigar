@@ -1,4 +1,15 @@
-# Testing guide
+# Current verification (2026-11-14)
+
+Use `bash scripts/test.sh` from the repo root with Python3.13 and the pinned bpy5.3.0. The original WSL commands below are historical examples, not required on this Mac. Current results and limitations are in [COMPLETION.md](COMPLETION.md).
+
+- Local preview: `.venv/bin/python scripts/preview_console.py`; owner token `local-demo-owner` on loopback only. Actual sample geometry/renders are built by the engine.
+- Formula proof: `.venv/bin/python scripts/weight_proof.py`.
+- Counter/queue simulation: `.venv/bin/python sim/run.py --users 1000 --seed 20261114`.
+- Console browser checks: install `puppeteer-core` separately as development tooling; set `HALLMARK_PUPPETEER` to its module path and run `node scripts/check_console.mjs` against the preview. It writes screenshots, checks real GLBs and interactions, blocks external dependencies, and checks draft/disclosure/viewer persistence across polling intervals.
+- Live deployment/import: [nonilion-setup.md](nonilion-setup.md). Demo narration and deferred recording: [demo-script.md](demo-script.md).
+
+# Historical phase testing guide
+
 
 ## Automated
 - Full suite: `.claude/test-command` — runs `pytest -q` inside WSL with the project venv. 69 tests, ~75 s (most of it the bpy and end-to-end tests).

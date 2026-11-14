@@ -1,0 +1,15 @@
+import {createRequire} from 'node:module';
+import {writeFile} from 'node:fs/promises';
+const require=createRequire(import.meta.url);
+const pptr=require(process.env.HALLMARK_PUPPETEER||'puppeteer-core');
+const browser=await pptr.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--no-sandbox']});
+const page=await browser.newPage();await page.setViewport({width:1440,height:900,deviceScaleFactor:1});
+await page.goto('http://127.0.0.1:8080/console/',{waitUntil:'networkidle0'});
+await page.type('#token','local-demo-owner');await page.click('#login-form button');await page.waitForSelector('#shell:not([hidden])');
+await page.goto('http://127.0.0.1:8080/console/#demo',{waitUntil:'networkidle0'});
+await page.type('#chat-text','22K ring, size 14, under 1.2 g, with a 1 ct diamond');await page.click('#chat-form .primary');
+await page.waitForFunction(()=>!document.querySelector('#chat-form .primary').disabled&&document.querySelector('.message.assistant')?.textContent.includes('lightest'),{timeout:90000});
+await new Promise(r=>setTimeout(r,2000));
+const text=await page.$eval('.message.assistant',e=>e.textContent);
+await page.screenshot({path:'out/refusal-complete.png',fullPage:false});
+await writeFile('out/refusal-complete.txt',text);console.log(JSON.stringify({complete:text.includes('lightest'),characters:text.length}));await browser.close();

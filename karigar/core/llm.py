@@ -133,9 +133,11 @@ def _agentrouter_text(system: str, user: str, c: dict, runner=None) -> str | Non
         line = line.strip()
         if line.startswith("{"):
             try:
-                data = json.loads(line)
-                break
-            except json.JSONDecodeError:
+                parsed = extract_json(line)
+                if isinstance(parsed, dict):
+                    data = parsed
+                    break
+            except (ValueError, RecursionError):
                 continue
     if data is None:
         snippet = redact((proc.stdout or "") + (proc.stderr or ""), c["agentrouter_key"])[:200]
@@ -165,12 +167,32 @@ def _anthropic_text(system: str, user: str, c: dict, max_tokens: int) -> str | N
 
 def extract_json(text: str) -> dict | list | None:
     """First JSON object or array in the text (models sometimes add prose or fences)."""
+    if len(text or '') > 262144:
+        return None
     m = re.search(r"(\{.*\}|\[.*\])", text or "", re.S)
     if not m:
         return None
+    depth = 0
+    quoted = escaped = False
+    for ch in m.group(1):
+        if quoted:
+            if escaped:
+                escaped = False
+            elif ch == '\\':
+                escaped = True
+            elif ch == '"':
+                quoted = False
+        elif ch == '"':
+            quoted = True
+        elif ch in '[{':
+            depth += 1
+            if depth > 64:
+                return None
+        elif ch in ']}':
+            depth -= 1
     try:
         return json.loads(m.group(1))
-    except json.JSONDecodeError:
+    except (ValueError, RecursionError):
         return None
 
 

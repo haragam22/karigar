@@ -90,6 +90,8 @@ def make_server(host: str, port: int, service: KarigarService, api_key: str, wor
         raise ValueError("KARIGAR_API_KEY and KARIGAR_WORKER_TOKEN are required")
     if hmac.compare_digest(api_key, worker_token):
         raise ValueError("KARIGAR_WORKER_TOKEN must differ from KARIGAR_API_KEY")
+    if owner_token and (hmac.compare_digest(owner_token, api_key) or hmac.compare_digest(owner_token, worker_token)):
+        raise ValueError("KARIGAR_OWNER_TOKEN must differ from the API and worker tokens")
     waiting = threading.BoundedSemaphore(max_waiting)
     console = Path(console_dir).resolve() if console_dir else None
 
@@ -151,6 +153,8 @@ def make_server(host: str, port: int, service: KarigarService, api_key: str, wor
             if length is not None:
                 self.send_header("Content-Length", str(length))
             self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Cache-Control", "no-store")
             for k, v in (extra or {}).items():
                 self.send_header(k, v)
             if self.close_connection:
@@ -219,11 +223,14 @@ def make_server(host: str, port: int, service: KarigarService, api_key: str, wor
                 need = None
             elif path.startswith("/worker/"):
                 need = "worker"
+            elif path.startswith("/api/console"):
+                need = "owner"
             elif path.startswith("/api/"):
                 need = "api"
             else:
                 need = "chat"
             ok = (need is None or (need == "worker" and self._is(worker_token))
+                  or (need == "owner" and self._is(owner_token))
                   or (need == "api" and (self._is(api_key) or self._is(owner_token)))
                   or (need == "chat" and self._is(api_key)))
             try:
@@ -261,7 +268,7 @@ def make_server(host: str, port: int, service: KarigarService, api_key: str, wor
                     body = _parse_json(raw)
                 except BadBody as b:
                     return self._error(400, b.code, b.message)
-            if need == "api":
+            if need in ("api", "owner"):
                 return self._api(method, path, body)
             prefix, agent, route, path_ok = split_path(path)
             if not prefix or not path_ok or (agent is not None and agent not in AGENTS):
@@ -333,6 +340,28 @@ def make_server(host: str, port: int, service: KarigarService, api_key: str, wor
 
         # --- JSON API ------------------------------------------------------------------
         def _api(self, method: str, path: str, body) -> None:
+            seen = re.fullmatch(r'/api/console/jobs/([A-Za-z0-9_-]{1,64})/seen', path)
+            if seen and method == 'POST':
+                job = service.jobs.get(seen[1])
+                if job is None:
+                    return self._error(404, 'not_found', 'No such job')
+                service.jobs.mark_delivered(job.job_id, 2 if not job.active else 1 if job.partial else 0)
+                return self._json(200, {'ok': True})
+            if path == "/api/console/chat" and method == "POST":
+                why = validate_chat(body)
+                if why:
+                    return self._error(400, "invalid_request", why)
+                return self._chat(body, body.get("agent") if body.get("agent") in AGENTS else "karigar")
+            if path == "/api/console" and method == "GET":
+                from .console import snapshot
+                return self._json(200, snapshot(service))
+            if path == "/api/console/actions" and method == "POST":
+                from .console import enqueue
+                try:
+                    job = enqueue(service, body)
+                except ValueError as e:
+                    return self._error(400, "invalid_request", str(e))
+                return self._json(202, {"job_id": job.job_id, "status": job.status})
             seg = path.split("/")[2:]               # after /api
             b = body if isinstance(body, dict) else {}
             idem = self.headers.get("Idempotency-Key")
@@ -437,7 +466,7 @@ def make_server(host: str, port: int, service: KarigarService, api_key: str, wor
             data = p.read_bytes()
             ctype = {".html": "text/html; charset=utf-8", ".js": "text/javascript",
                      ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png",
-                     ".json": "application/json"}.get(p.suffix.lower(), "application/octet-stream")
+                     ".json": "application/json", ".woff2": "font/woff2", ".ttf": "font/ttf"}.get(p.suffix.lower(), "application/octet-stream")
             self._start(200, ctype, len(data))
             self.end_headers()
             self.wfile.write(data)
@@ -465,7 +494,8 @@ def main() -> int:
     svc = KarigarService(e("KARIGAR_SERVICE_DIR") or None)
     srv = make_server("0.0.0.0", port, svc, key, wtok, owner_token=e("KARIGAR_OWNER_TOKEN", ""),
                       public_url=e("KARIGAR_PUBLIC_URL") or e("RENDER_EXTERNAL_URL") or "",
-                      console_dir=Path(e("KARIGAR_CONSOLE_DIR")) if e("KARIGAR_CONSOLE_DIR") else None)
+                      console_dir=Path(e("KARIGAR_CONSOLE_DIR")) if e("KARIGAR_CONSOLE_DIR")
+                      else Path(__file__).resolve().parents[2] / "console")
     print(f"karigar service listening on :{port}", flush=True)
     try:
         srv.serve_forever()

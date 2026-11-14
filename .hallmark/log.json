@@ -1,0 +1,38 @@
+[
+  {
+    "scope": "app",
+    "shape": "app screen",
+    "theme": "atelier",
+    "axes": "light/roman-serif/warm",
+    "hero": "not applicable, app screen",
+    "nav": "workshop rail",
+    "footer": "quiet product colophon",
+    "imagery": "real Blender renders and GLB models",
+    "photos": [],
+    "entry": "console/index.html",
+    "fingerprint": "karigar-object-and-gold-workbench",
+    "sections": [
+      "studio",
+      "orders",
+      "catalogue",
+      "viewer",
+      "rates",
+      "workshop",
+      "demo",
+      "system"
+    ],
+    "signature": "The real jewellery beside its measured gold and quote",
+    "waived": [],
+    "prompt": "Hackathon jewellery console, bold showroom luxury and clear operations",
+    "date": "2026-11-14",
+    "mode": "build",
+    "verification": {
+      "static_and_rendered_floor_failures": 0,
+      "warnings": 4,
+      "warnings_reviewed": true,
+      "browser_checks": 23,
+      "browser_errors": 0,
+      "finish_review": "ship, local sample-data frontend scope"
+    }
+  }
+]

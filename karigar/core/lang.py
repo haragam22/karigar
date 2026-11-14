@@ -26,10 +26,15 @@ _WORD = re.compile(r"[a-z]+")
 
 def detect(text: str) -> str:
     """'hinglish' when the message reads as romanised Hindi, else 'en'."""
+    if re.search(r"[\u0900-\u097f]", text):
+        return HINGLISH
     words = _WORD.findall(text.lower())
+    # An English personal name and the English verb "do" need other Hindi context.
+    if "Sona" in text and not any(w in _STRONG - {"sona", "do"} or w in _WEAK for w in words):
+        return EN
     strong = sum(w in _STRONG for w in words)
     weak = sum(w in _WEAK for w in words)
     # "do" alone is English ("do you…"); it counts only next to another Hindi word.
-    if strong - words.count("do") >= 1 or strong + weak >= 2:
+    if strong - words.count("do") >= 1 or strong - words.count("do") + weak >= 2:
         return HINGLISH
     return EN

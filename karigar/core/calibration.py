@@ -7,6 +7,8 @@ those records, so predictions get sharper with every order.
 from __future__ import annotations
 
 import json
+import math
+import os
 import time
 from pathlib import Path
 
@@ -15,8 +17,8 @@ WINDOW = 20  # most recent records used
 
 
 class CalibrationStore:
-    def __init__(self, path: Path = DEFAULT_PATH, default_loss_pct: float = 3.0):
-        self.path = Path(path)
+    def __init__(self, path: Path | None = None, default_loss_pct: float = 3.0):
+        self.path = Path(path or os.environ.get("KARIGAR_CALIBRATION_FILE") or DEFAULT_PATH)
         self.default_loss_pct = default_loss_pct
         self.data = json.loads(self.path.read_text()) if self.path.exists() else {}
 
@@ -25,7 +27,7 @@ class CalibrationStore:
         self.path.write_text(json.dumps(self.data, indent=2))
 
     def record(self, workshop: str, designed_g: float, actual_g: float) -> float:
-        if designed_g <= 0 or actual_g <= 0:
+        if not math.isfinite(designed_g) or not math.isfinite(actual_g) or designed_g <= 0 or actual_g <= 0:
             raise ValueError("weights must be positive")
         recs = self.data.setdefault(workshop, {"records": []})["records"]
         recs.append({"designed_g": designed_g, "actual_g": actual_g, "ts": int(time.time())})

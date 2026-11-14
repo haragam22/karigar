@@ -65,8 +65,6 @@ _SCHEME_VALUE = re.compile(r"(?i)\b(bearer|basic|token)\s+\S+")
 # In body text only credential-shaped values (8+ chars with a digit or token punctuation) are cut, so
 # ordinary words after "basic"/"token" in a chat message stay readable.
 _BODY_SCHEME_VALUE = re.compile(r"(?i)\b(bearer|basic|token)\s+(?=\S*[0-9_\-.=+/])\S{8,}")
-_JSON_STRING = re.compile(rb'"[^"\\]*(?:\\.[^"\\]*)*"')
-_JSON_BRACKET = re.compile(rb"[\[\]{}]")
 
 
 def _is_secret(name: str) -> bool:
@@ -233,17 +231,32 @@ class BadBody(Exception):
 
 
 def _parse_json(raw: bytes):
-    """json.loads, but only after a cheap scan (C-speed regex/count) caps node count and depth, so a
-    small hostile body cannot blow up memory or recursion."""
-    bare = _JSON_STRING.sub(b'""', raw)
-    opens = bare.count(b"[") + bare.count(b"{")
-    if opens + bare.count(b",") > MAX_JSON_NODES or bare.count(b"]") + bare.count(b"}") > MAX_JSON_NODES:
-        raise BadBody("json_too_complex", f"JSON has more than {MAX_JSON_NODES} nodes")
-    depth = 0
-    for ch in _JSON_BRACKET.findall(bare):
-        depth += 1 if ch in (b"[", b"{") else -1
-        if depth > MAX_JSON_DEPTH:
-            raise BadBody("json_too_complex", f"JSON nested deeper than {MAX_JSON_DEPTH}")
+    """Bound complexity in one linear scan, including malformed/unterminated strings."""
+    depth = nodes = closes = 0
+    in_string = escaped = False
+    for ch in raw:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == 92:  # backslash
+                escaped = True
+            elif ch == 34:
+                in_string = False
+            continue
+        if ch == 34:
+            in_string = True
+        elif ch in (91, 123):
+            depth += 1
+            nodes += 1
+            if depth > MAX_JSON_DEPTH:
+                raise BadBody("json_too_complex", f"JSON nested deeper than {MAX_JSON_DEPTH}")
+        elif ch in (93, 125):
+            depth -= 1
+            closes += 1
+        elif ch == 44:
+            nodes += 1
+        if nodes > MAX_JSON_NODES or closes > MAX_JSON_NODES:
+            raise BadBody("json_too_complex", f"JSON has more than {MAX_JSON_NODES} nodes")
     try:
         return json.loads(raw)
     except (ValueError, RecursionError):  # JSONDecodeError, UnicodeDecodeError, int-too-long are ValueErrors
@@ -253,11 +266,13 @@ def _parse_json(raw: bytes):
 class RequestLog:
     """Thread-safe JSONL log: ASCII-only lines, each capped, rotated across `keep` old files."""
 
-    def __init__(self, path: Path, max_bytes: int = MAX_LOG_BYTES, keep: int = LOG_KEEP):
+    def __init__(self, path: Path, max_bytes: int = MAX_LOG_BYTES, keep: int = LOG_KEEP, *, protected=True):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.max_bytes, self.keep = max_bytes, keep
         self.lock = threading.Lock()
+        self.authenticated = (RequestLog(self.path.with_name(self.path.name + '.authenticated'),
+                                        max_bytes, keep, protected=False) if protected else None)
 
     def _old(self, k: int) -> Path:
         return self.path.with_name(f"{self.path.name}.{k}")
@@ -270,6 +285,10 @@ class RequestLog:
         self.path.replace(self._old(1))
 
     def write(self, entry: dict) -> None:
+        # Keep authenticated evidence in an independently rotated file. An unauthenticated
+        # flood can rotate the general diagnostics, but cannot erase real probe requests.
+        if entry.get('auth_ok') is True and self.authenticated is not None:
+            self.authenticated.write(entry)
         # ensure_ascii: lone surrogates can't break the write, and U+2028/U+2029/\x85 stay escaped
         line = json.dumps(entry, ensure_ascii=True, default=str)
         if len(line) > MAX_LOG_ENTRY:
@@ -284,7 +303,7 @@ class RequestLog:
                 f.write(data)
 
     @staticmethod
-    def _last_lines(path: Path, n: int) -> list:
+    def _last_lines(path: Path, n: int, max_bytes: int = 1024 * 1024) -> list:
         """The last n non-empty lines of a file, read backwards in blocks (never the whole file)."""
         try:
             f = path.open("rb")
@@ -293,8 +312,8 @@ class RequestLog:
         with f:
             end = f.seek(0, os.SEEK_END)
             buf, pos = b"", end
-            while pos > 0 and buf.count(b"\n") <= n:
-                step = min(65536, pos)
+            while pos > 0 and buf.count(b"\n") <= n and len(buf) < max_bytes:
+                step = min(65536, pos, max_bytes - len(buf))
                 pos -= step
                 f.seek(pos)
                 buf = f.read(step) + buf
@@ -303,13 +322,16 @@ class RequestLog:
             lines = lines[1:]  # first piece may be a partial line
         return lines[-n:]
 
-    def tail(self, n: int) -> list:
+    def tail(self, n: int, max_bytes: int = 1024 * 1024) -> list:
         lines: list = []
+        remaining = max_bytes
         with self.lock:
             for path in [self.path] + [self._old(k) for k in range(1, self.keep + 1)]:
-                if len(lines) >= n:
+                if len(lines) >= n or remaining <= 0:
                     break
-                lines = self._last_lines(path, n - len(lines)) + lines
+                more = self._last_lines(path, n - len(lines), remaining)
+                remaining -= sum(len(line) + 1 for line in more)
+                lines = more + lines
         out = []
         for line in lines[-n:]:
             try:
@@ -678,7 +700,8 @@ def make_server(host: str, port: int, api_key: str, log_path=DEFAULT_LOG,
                     n = max(1, min(500, int(q.get("n", ["50"])[0][:6])))
                 except ValueError:
                     n = 50
-                return self._json(200, {"entries": log.tail(n)})
+                retained = log.authenticated or log
+                return self._json(200, {"entries": retained.tail(n)})
             if method == "GET" and route == "/models":
                 return self._json(200, {"object": "list", "data": [_model()]})
             if method == "GET" and route == f"/models/{MODEL_ID}":

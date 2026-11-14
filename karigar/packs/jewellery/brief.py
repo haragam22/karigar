@@ -17,7 +17,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from karigar.core import llm
 from karigar.core.lang import EN, detect
@@ -27,6 +27,7 @@ from . import sizes
 from .schema import STYLE_WORDS, Brief, ChainLength, Gem, Karat, Metal, PieceType, style_tags
 
 MAX_QUESTIONS = 3
+MAX_INPUT_CHARS = 2000
 
 
 def inr(x):
@@ -87,6 +88,10 @@ CHAIN_LENGTH = r"(?<!\d)(16|18|20|22|24)\s*(?:\"|''|-?\s*inch(?:es)?\b|in\b|inch
 
 def family_from_text(piece: str | None, t: str) -> str | None:
     """The catalogue family a style word names for this piece, or None. Code only, never the LLM."""
+    from .families import CATALOGUE, FAMILIES
+    for name in CATALOGUE:
+        if name in FAMILIES and FAMILIES[name].piece_type == piece and re.search(rf"\b{re.escape(name)}\b", t):
+            return name
     for p, pat, fam in FAMILY_WORDS:
         if p == piece and re.search(pat, t, re.S):
             return fam
@@ -123,7 +128,7 @@ class BriefDraft(BaseModel):
     metal: Optional[Metal] = None
     old_gold: Optional[OldGoldDraft] = None
     target_weight_g: Optional[float] = Field(None, gt=0, le=500)
-    budget_inr: Optional[float] = Field(None, gt=0)
+    budget_inr: Optional[float] = Field(None, gt=0, le=10_000_000)
     gem: Optional[Gem] = None
     gem_ct: Optional[float] = Field(None, gt=0, le=5)
     ring_size: Optional[int] = Field(None, ge=1, le=30)
@@ -131,6 +136,13 @@ class BriefDraft(BaseModel):
     bangle_inner_d_mm: Optional[float] = Field(None, ge=45, le=75)
     length_in: Optional[ChainLength] = None
     style: list[str] = []
+
+    @model_validator(mode='after')
+    def _consistent_ring_size(self):
+        if self.ring_size is not None and self.ring_inner_d_mm is not None:
+            if abs(sizes.ring_inner_d_mm(self.ring_size) - self.ring_inner_d_mm) > 0.05:
+                raise ValueError('Ring size and inner diameter conflict; ask which is correct')
+        return self
 
     @field_validator("style", mode="before")
     @classmethod
@@ -152,7 +164,7 @@ class BriefResult:
 # A number that starts where a digit run starts: never inside "12345" or right after "1.", so
 # each unit regex is tried once per number, not once per digit (security F6: 20 KB of digits
 # took 20+ s with unanchored "(\d+...)\s*unit" patterns).
-NUM = r"(?<!\d)(?<!\d\.)(\d+(?:\.\d+)?)"
+NUM = r"(?<![\d.eE+\-])(?<!\d\.)(\d+(?:\.\d+)?)"
 
 
 def _num(s: str) -> float:
@@ -173,8 +185,9 @@ def _regex_parse(text: str) -> dict:
             d["gem"] = g
             break
     kms = list(re.finditer(r"\b(24|22|18|14)\s*-?\s*(k|kt|karat|carat|ct)\b", t))
-    gem_ct = re.search(r"\b(\d+(?:\.\d+)?)\s*(?:ct|carat|cts)\b", t)
-    if gem_ct and _num(gem_ct.group(1)) < 6:
+    gem_ct = next((m for m in re.finditer(NUM + r"\s*(?:ct|carats?|cts)\b", t)
+                   if _num(m.group(1)) < 6), None)
+    if gem_ct:
         d["gem_ct"] = _num(gem_ct.group(1))
         d.setdefault("gem", "diamond")
     grams = re.search(NUM + r"\s*(?:g|gm|gms|gram|grams)\b", t)
@@ -207,7 +220,7 @@ def _regex_parse(text: str) -> dict:
             d["target_weight_g"] = round(cur * (1 - _num(pct.group(1)) / 100), 2)
     lakh = re.search(NUM + r"\s*(?:lakh|lac)", t)
     kbud = re.search(r"(?:₹|rs\.?|inr|budget|under|within)\s*(\d[\d,]*(?:\.\d+)?)(?![\d.,])\s*(k)?\b"
-                     r"(?!\s*(?:g|gm|gms|grams?|ct|cts|carat|mm)\b)", t)
+                     r"(?!\s*(?:g|gm|gms|grams?|ct|cts|carat|mm|days?|weeks?|months?|years?|hours?|minutes?)\b)", t)
     if lakh:
         d["budget_inr"] = _num(lakh.group(1)) * 100000
     elif kbud:
@@ -238,8 +251,14 @@ def _regex_parse(text: str) -> dict:
             v = _num(rsize.group(1))
             if v.is_integer() and 1 <= v <= 30:
                 d["ring_size"] = int(v)          # Indian size: this is an Indian shop
-            else:
-                d["ring_inner_d_mm"] = v         # "size 17.3" = a diameter
+            # A fractional Indian size needs clarification; diameter requires explicit mm.
+        if rsize and not us and not rmm and not _num(rsize.group(1)).is_integer():
+            d.pop("ring_size", None)
+        if rsize and rmm and not us:
+            v = _num(rsize.group(1))
+            if v.is_integer() and 1 <= v <= 30 and abs(sizes.ring_inner_d_mm(int(v)) - d["ring_inner_d_mm"]) > 0.05:
+                d.pop("ring_inner_d_mm", None)
+                d.pop("ring_size", None)
     for w, tag in STYLE_WORDS.items():
         if re.search(rf"\b{w}\b", t) and tag not in d["style"]:
             d["style"].append(tag)
@@ -347,6 +366,9 @@ def _defaults(d: BriefDraft, lang: str) -> list[str]:
 
 
 def analyse(text: str, attachments=None) -> BriefResult:
+    if len(text) > MAX_INPUT_CHARS:
+        q = "Please shorten the request to 2,000 characters and include the piece, purity, size and weight or budget."
+        return BriefResult("needs_info", EN, reply=q, questions=[q], topics=["request_length"])
     lang = detect(text)
     t = text.lower()
     oos = _out_of_scope(t)

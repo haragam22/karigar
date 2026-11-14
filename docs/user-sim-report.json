@@ -1,0 +1,15 @@
+{
+  "seed": 20261114,
+  "users": 1000,
+  "mix": {
+    "valid": 609,
+    "incomplete": 189,
+    "hostile": 160,
+    "unauthorized_rate": 42
+  },
+  "failures": [],
+  "intake_p95_ms": 1.2082079920219257,
+  "queue_ack_plus_retry_p95_ms": 2.7094580000266433,
+  "scope": "Real deterministic intake, authorization, schemas and queue/idempotency; no rendering, external client or physical casting simulation",
+  "pass": true
+}

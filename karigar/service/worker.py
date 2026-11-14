@@ -25,6 +25,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 from pathlib import Path
 
 from ..core.stagelog import log_stage
@@ -71,8 +72,10 @@ class HttpClient:
         if not token:
             raise ValueError("KARIGAR_WORKER_TOKEN is required")
         u = base_url.rstrip("/")
-        if not (u.startswith("https://") or u.startswith("http://127.0.0.1")
-                or u.startswith("http://localhost")):
+        parsed = urlsplit(u)
+        if not (parsed.scheme == "https" and parsed.hostname or
+                parsed.scheme == "http" and parsed.hostname in ("localhost", "127.0.0.1", "::1")) \
+                or parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError("the service URL must be https:// (http only for localhost)")
         self.base, self.token, self.timeout = u, token, timeout
 
@@ -188,10 +191,40 @@ class Worker:
         return result
 
     def run_job(self, job: dict) -> dict:
+        """Keep the lease and online status alive even during a long blocking render."""
+        finished = threading.Event()
+        def heartbeat():
+            while not finished.wait(30):
+                try:
+                    self.c.progress(job["job_id"], [])
+                except (ServiceError, OSError):
+                    pass
+        thread = threading.Thread(target=heartbeat, daemon=True, name="worker-heartbeat")
+        thread.start()
+        try:
+            return self._run_job(job)
+        finally:
+            finished.set()
+            thread.join(timeout=1)
+
+    def _run_job(self, job: dict) -> dict:
         job_id, payload = job["job_id"], job.get("payload") or {}
         t0 = time.time()
         log_stage("job_start", event="worker", job=job_id, kind=job.get("kind"))
         tr = ProgressTransport(self.c, job_id)
+        if job.get("kind") == "owner":
+            from .shop import run_owner
+            try:
+                res = run_owner(payload, self.out_dir, self.quality,
+                                lambda text: tr._push(text, force=True))
+                res = self._upload_files(job_id, res)
+                if payload.get("action") == "catalogue":
+                    res["data"]["catalogue"] = res["results"]
+                self.c.finish(job_id, res)
+                return res
+            except Exception as e:
+                self.c.fail(job_id, type(e).__name__)
+                return {"status": "failed", "error": type(e).__name__}
         sent = {"solved": False}
 
         def on_stage(stage: str, data: dict) -> None:

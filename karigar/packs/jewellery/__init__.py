@@ -155,6 +155,9 @@ class JewelleryPack(DomainPack):
 
     def intake(self, text, attachments=None, sender=None) -> Intake:
         """Rate updates first (owner/staff senders only), then the brief (scope, questions, or a Brief)."""
+        if len(text) > B.MAX_INPUT_CHARS:
+            a = B.analyse(text)
+            return Intake("needs_info", reply=a.reply, lang=a.lang, questions=a.questions, topics=a.topics)
         lang = detect(text)
         r = rates.parse_rate_message(text)
         if r and not any(re.search(p, text.lower()) for p in B.PIECE_WORDS.values()):

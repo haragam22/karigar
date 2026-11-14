@@ -81,9 +81,9 @@ Numbers come from `docs/decisions.md`; if one changes there, change it here.
 1. Fine gold: 18.4 g × 0.916 purity × (1 − 2% melting) = **16.52 g**
 2. Finished 22K weight: 16.52 ÷ 0.916 = **18.03 g**
 3. Weight to model: 18.03 ÷ (1 − 3% workshop loss) = **18.59 g**
-4. The solver scales the design's cross-section (ring size fixed), measuring real 3D volume × alloy density each pass, and converges in 4–5 passes to **±0.3%**.
+4. The solver scales the design's cross-section (ring size fixed), measuring real 3D volume × alloy density each pass, and aims for **±0.3%**, within a fixed iteration cap and a hard acceptance window of the tighter of 0.1 g and 2%.
 5. Casting rules bound the scaling. Outside them → explain + options.
-**Say:** We claim ±2% after finishing, not ±0.3%. Real casting varies, and calibration closes that gap.
+**Say:** The solver target and finished-casting tolerance are different. Uncalibrated results show the configured ±4% assumed band; actual shop records refine it. No physical casting accuracy is claimed yet.
 
 ## 9. Honest by design
 **Title:** It says no, and shows you the way out
@@ -97,18 +97,18 @@ Numbers come from `docs/decisions.md`; if one changes there, change it here.
 ## 10. Accuracy
 **Title:** How do we know the weight is right?
 **On slide:**
-- Volume maths is exact: the 3D model's volume matches the formula for reference shapes (a plain band is an annulus, V = π·w·(R² − r²)) within 0.5%.
+- Five reference meshes agree with their exact formulas within 0.30%. The rounded flat-band cross-section uses Pappus’s theorem; the disc uses πr²h.
 - Same design in → same weight out, to 0.01 g, every time.
 - Real-world loss (casting, polishing) is learned per workshop: the karigar weighs the finished piece, Karigar records it, the next prediction uses it.
-**Say:** Volume is exact. What varies is each workshop's loss, and Karigar learns it from real weighings.
+**Say:** Reference-shape meshes agree with their exact formulas within the measured error. Real workshop loss still needs actual weighings.
 
 ## 11. Numbers come from sources, not from the model
 **Title:** Every shop number is cited
 **On slide:**
 | Number | Value | Source |
 |---|---|---|
-| Hallmarking (BIS HUID) | ₹75 per piece | BIS amendment, 14 Sep 2026 |
-| GST | 3% on gold and stones, 5% on making (custom piece) | PKC India GST guide 2026 |
+| Hallmarking (BIS HUID) | Configured ₹75 per piece | Shop demo policy; confirm for production |
+| GST | Configured 3% gold/stones, 5% making | Assumed shop treatment; confirm with the shop’s CA |
 | Old-gold deduction | 2% | Shop policy; brands charge 2–5% |
 | Making charge | 3.5% | Shop policy |
 | Min ring shank | 1.5 mm | Ganoksin casting guidance |
@@ -121,7 +121,7 @@ Numbers come from `docs/decisions.md`; if one changes there, change it here.
 **On slide:**
 - The jeweller, the customer and the karigar share one Nonilion room.
 - Karigar joins the room as an imported AI agent; the room's chat goes to Karigar's own engine.
-- Today's gold rate set in chat: "aaj ka rate 22K 14730".
+- The owner refreshes the timestamped gold rate through the worker or console. Anonymous room messages cannot change it.
 - Results come back in the room: comparison, renders, quote, and the job card for the karigar.
 **Say:** The office is where the whole job happens, from the counter to the workshop.
 
@@ -200,8 +200,8 @@ Numbers come from `docs/decisions.md`; if one changes there, change it here.
 ---
 
 ## Judge Q&A (backup slides)
-- **How accurate is the weight?** Volume maths exact to < 0.5% on reference shapes; ±0.3% solver; we claim ±2% after finishing until a shop's calibration narrows it.
-- **What if the gold rate changes?** The jeweller sets it in chat or config; every quote shows the rate and its time; older than 24 h → Karigar asks.
+- **How accurate is the weight?** Reference meshes agree with exact formulas within 0.30%; the solver aims for ±0.3%; uncalibrated finished-weight estimates show an assumed ±4% band, refined with actual shop records.
+- **What if the gold rate changes?** The owner refreshes it through the worker or console; every quote shows the rate and its time; older than 24 h → Karigar asks.
 - **Why not a CAD jeweller?** Days and a fee per design vs minutes, and the weight is solved, not guessed.
 - **What stops the AI inventing a price?** The model never outputs a number shown to the customer; code computes every one from cited data.
 - **Who pays?** [Fill before the pitch.]

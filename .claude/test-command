@@ -1,1 +1,1 @@
-wsl -e bash -lc "cd /mnt/c/Users/harag/Documents/coding/igdtuw/karigar/karigar && ./venv/bin/python -m pytest -q"
+bash scripts/test.sh
