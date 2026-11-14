@@ -1,4 +1,4 @@
-bpy        # Blender as a Python module (bpy 5.x needs Python 3.13; 4.x needs 3.11)
-pydantic>=2
-pytest>=8       # test suite (tests/), run via .claude/test-command
+bpy==5.3.0     # tested on Python 3.13, including macOS arm64
+pydantic>=2,<3
+pytest>=8,<10  # scripts/test.sh; no WSL dependency
 anthropic       # optional: LLM brief + designer; pipeline falls back without it

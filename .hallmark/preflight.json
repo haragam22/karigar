@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-14",
+  "scope": "app",
+  "sources": [
+    "PRODUCT.md:9",
+    "PRODUCT.md:28",
+    "docs/implementation.md:192"
+  ],
+  "preserved": [
+    "Pinned ink, gold and warm-white palette",
+    "Showroom luxury and real engine geometry",
+    "Eight console destinations and offline fallback"
+  ],
+  "introduced": [
+    "Owner-authenticated console read model and queued shop actions",
+    "Self-hosted model-viewer and fonts",
+    "Responsive object-led workbench and persistence checks"
+  ],
+  "material": {
+    "real": [
+      "19 Blender families",
+      "Computed weights and quote sources",
+      "Existing orders, job cards and GLB export"
+    ],
+    "pictures": "Engine-generated renders and models, no stock stand-ins",
+    "absent": [
+      "Real customers",
+      "Physical casting proof",
+      "Live Render/Nonilion deployment"
+    ]
+  },
+  "theme": "Atelier, palette overridden by user commitments"
+}

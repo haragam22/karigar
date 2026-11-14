@@ -39,6 +39,11 @@ Thumbs.db
 # Nonilion probe request log (contains real chat text)
 probe/requests.jsonl
 probe/requests.jsonl.1
+probe/requests.jsonl.*
 
 # Phase 7 service runtime data (jobs DB + uploaded files)
 data/service/
+
+# Local design-tool capture cache and random seed
+.hallmark/shots/
+.hallmark/salt

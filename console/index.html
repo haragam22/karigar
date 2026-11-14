@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#1C1B19" />
+    <meta
+      name="description"
+      content="Karigar jewellery workbench. From a Hinglish brief to a design that obeys the gold."
+    />
+    <title>Karigar, Jewellery workbench</title>
+    <link rel="stylesheet" href="./app.css" />
+    <script type="module" src="./vendor/model-viewer.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to workbench</a>
+    <div id="login" class="login">
+      <div class="login-story">
+        <a class="wordmark" href="#studio"
+          >karigar<span class="brand-mark" aria-hidden="true">क</span></a
+        >
+        <h1>The design<br />obeys the gold.</h1>
+        <p>Your jewellery workshop, from the first wish to the final gram.</p>
+        <p class="login-note">
+          Real geometry. Measured metal. A quote you can explain.
+        </p>
+      </div>
+      <form id="login-form" class="login-form">
+        <h2>Open your workshop</h2>
+        <p>Enter the owner's access token to view orders and create designs.</p>
+        <label for="token">Owner token</label
+        ><input
+          id="token"
+          type="password"
+          autocomplete="current-password"
+          required
+        /><button class="primary" type="submit">Open workbench</button>
+        <p id="login-error" role="alert"></p>
+        <small
+          >Your token stays in this tab and is cleared when you sign out.</small
+        >
+      </form>
+    </div>
+    <div id="shell" hidden>
+      <aside class="rail">
+        <a class="wordmark" href="#studio"
+          >karigar<span class="brand-mark" aria-hidden="true">क</span></a
+        ><button id="menu" aria-expanded="false" aria-controls="navigation">
+          Menu
+        </button>
+        <nav id="navigation" aria-label="Workshop">
+          <a href="#studio">Design studio</a><a href="#orders">Orders</a
+          ><a href="#catalogue">Design catalogue</a
+          ><a href="#viewer">3D showroom</a><a href="#rates">Gold rate</a
+          ><a href="#workshop">Workshop</a><a href="#demo">Try in Hinglish</a
+          ><a href="#system">System</a>
+        </nav>
+        <div class="rail-bottom">
+          <p id="rail-health">Checking workshop…</p>
+          <button id="logout" class="quiet">Sign out</button
+          ><small>Made for the jeweller's counter.</small>
+        </div>
+      </aside>
+      <div class="workspace">
+        <header class="topbar">
+          <span id="breadcrumb">Jewellery / Design studio</span>
+          <div>
+            <button id="sync" class="quiet">Sync shop data</button
+            ><a class="primary" href="#studio">New design</a>
+          </div>
+        </header>
+        <main id="main" tabindex="-1">
+          <div class="loading" role="status">Opening your workshop…</div>
+        </main>
+        <footer>
+          Karigar <span>The numbers come from the workshop engine.</span>
+        </footer>
+      </div>
+    </div>
+    <div id="toast" role="status" aria-live="polite" hidden></div>
+    <noscript
+      ><p class="noscript">
+        This workbench needs JavaScript for secure sign-in, order creation and
+        3D interaction. The Python CLI and Nonilion integration also work
+        independently.
+      </p></noscript
+    >
+  </body>
+</html>

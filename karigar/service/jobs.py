@@ -105,6 +105,11 @@ def _row_job(r) -> Job:
 
 
 class JobStore:
+    def recent(self, limit: int = 200) -> list[Job]:
+        with self._tx() as con:
+            rows = con.execute("SELECT * FROM jobs ORDER BY created DESC LIMIT ?", (limit,)).fetchall()
+        return [_row_job(r) for r in rows]
+
     def __init__(self, path: Path | str, clock=time.time):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -240,6 +245,7 @@ class JobStore:
             r = self._active(con, job_id)
             if r["status"] not in ACTIVE:
                 return
+            con.execute("INSERT OR REPLACE INTO meta (k, v) VALUES ('worker_seen', ?)", (str(now),))
             prog = json.loads(r["progress_json"])
             prog += [{"t": now, "text": str(x)[:MAX_LINE]} for x in lines if str(x).strip()]
             con.execute("UPDATE jobs SET progress_json = ?, lease_until = ?, updated = ?"

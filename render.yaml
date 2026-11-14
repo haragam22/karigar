@@ -18,7 +18,7 @@ services:
         sync: false
       - key: KARIGAR_WORKER_TOKEN   # the laptop worker's token (must differ from the API key)
         sync: false
-      - key: KARIGAR_OWNER_TOKEN    # optional: owner console (Phase 10)
+      - key: KARIGAR_OWNER_TOKEN    # required for the owner console; distinct from both other tokens
         sync: false
       - key: KARIGAR_SERVICE_DIR
         value: /tmp/karigar-service

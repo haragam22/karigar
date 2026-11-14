@@ -2,7 +2,7 @@
 AI artisan inside Nonilion: turns a jeweller's Hinglish request into a castable design solved to a gold weight or budget, with renders, STL, job card and quote. Phase 1 = jewellery pack.
 
 ## Stack
-Python 3.11, Blender as a module (`bpy` 5.0.1), Pydantic 2. LLM optional: AgentRouter via the `claude` CLI (`core/llm.py`, keys in `.env`). Runs in WSL (`venv/` is a Linux venv). Planned: standalone service on Render (OpenAI-compatible endpoint that Nonilion imports) + Blender worker.
+Python3.13, Blender as a module (`bpy`5.3.0), Pydantic 2. LLM optional: AgentRouter via the `claude` CLI (`core/llm.py`, keys in `.env`). Native macOS/Linux and WSL are supported; run `bash scripts/test.sh`. Implemented: standalone service on Render (OpenAI-compatible endpoint that Nonilion imports) + Blender worker.
 
 ## Commands (inside WSL, repo root)
 - Run: `./venv/bin/python run.py order "<request>" --quality draft`

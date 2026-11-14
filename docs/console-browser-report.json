@@ -1,0 +1,162 @@
+{
+  "report": [
+    {
+      "route": "studio",
+      "width": 1440,
+      "title": "A wish. A design.Your gold.",
+      "overflow": false,
+      "main": "Phool Ring (balanced)8.00 gA wish. A design.Your gold.Tell Sakhi what you want to make. Karigar takes it to the workshop.Your brief / Aapki farmaishInclude the piece, purity, size,",
+      "model": true
+    },
+    {
+      "route": "orders",
+      "width": 1440,
+      "title": "Every piece has a story",
+      "overflow": false,
+      "main": "Every piece has a storyYour requests, designs and revisions, together.Search ordersOrder statusAll statusesIn the queueIn the workshopNumbers readyReadyNeeds your answerCannot meet",
+      "model": false
+    },
+    {
+      "route": "catalogue",
+      "width": 1440,
+      "title": "A collection with possibilities",
+      "overflow": false,
+      "main": "A collection with possibilitiesOriginal parametric families. Measured, rotatable, made to your gold.Rebuild collectionFloral Cluster Ring22K ring at catalogue scale, modelled grams",
+      "model": false
+    },
+    {
+      "route": "viewer",
+      "width": 1440,
+      "title": "Floral Cluster Ring",
+      "overflow": false,
+      "main": "Floral Cluster RingDrag to rotate. Pinch or scroll to inspect the details.Reset viewRotate automaticallyDownload GLBThe GLB shows the design at real-world scale. STL includes confi",
+      "model": true
+    },
+    {
+      "route": "rates",
+      "width": 1440,
+      "title": "Gold has a timestamp",
+      "overflow": false,
+      "main": "Gold has a timestampThe current shop rate is used by the engine, never estimated.Refresh from MCXSwipe or scroll to see all columns.PurityRate per gramStatusUpdatedSource24K₹14,200",
+      "model": false
+    },
+    {
+      "route": "workshop",
+      "width": 1440,
+      "title": "The workshop learns your hand",
+      "overflow": false,
+      "main": "The workshop learns your handRecord actual finished weight to improve the next prediction.Record a castingUse an order's casting weightEnter manuallyORD-20261114-125352-032c / v1OR",
+      "model": false
+    },
+    {
+      "route": "demo",
+      "width": 1440,
+      "title": "Speak the language of the shop",
+      "overflow": false,
+      "main": "Speak the language of the shopThe same streamed replies that Sakhi and Karigar send to Nonilion.New conversationSakhi is listeningTry an old-gold exchange, a budget or an impossibl",
+      "model": false
+    },
+    {
+      "route": "system",
+      "width": 1440,
+      "title": "The workshop, at a glance",
+      "overflow": false,
+      "main": "The workshop, at a glanceService queue and the laptop worker. No hidden rendering dependency.Refresh statusOnlineBlender worker0Queued jobs0Running jobsBuild P0. The worker makes o",
+      "model": false
+    },
+    {
+      "route": "studio",
+      "width": 360,
+      "title": "A wish. A design.Your gold.",
+      "overflow": false,
+      "main": "Phool Ring (balanced)8.00 gA wish. A design.Your gold.Tell Sakhi what you want to make. Karigar takes it to the workshop.Your brief / Aapki farmaishInclude the piece, purity, size,",
+      "model": true
+    },
+    {
+      "route": "orders",
+      "width": 360,
+      "title": "Every piece has a story",
+      "overflow": false,
+      "main": "Every piece has a storyYour requests, designs and revisions, together.Search ordersOrder statusAll statusesIn the queueIn the workshopNumbers readyReadyNeeds your answerCannot meet",
+      "model": false
+    },
+    {
+      "route": "catalogue",
+      "width": 360,
+      "title": "A collection with possibilities",
+      "overflow": false,
+      "main": "A collection with possibilitiesOriginal parametric families. Measured, rotatable, made to your gold.Rebuild collectionFloral Cluster Ring22K ring at catalogue scale, modelled grams",
+      "model": false
+    },
+    {
+      "route": "viewer",
+      "width": 360,
+      "title": "Floral Cluster Ring",
+      "overflow": false,
+      "main": "Floral Cluster RingDrag to rotate. Pinch or scroll to inspect the details.Reset viewRotate automaticallyDownload GLBThe GLB shows the design at real-world scale. STL includes confi",
+      "model": true
+    },
+    {
+      "route": "rates",
+      "width": 360,
+      "title": "Gold has a timestamp",
+      "overflow": false,
+      "main": "Gold has a timestampThe current shop rate is used by the engine, never estimated.Refresh from MCXSwipe or scroll to see all columns.PurityRate per gramStatusUpdatedSource24K₹14,200",
+      "model": false
+    },
+    {
+      "route": "workshop",
+      "width": 360,
+      "title": "The workshop learns your hand",
+      "overflow": false,
+      "main": "The workshop learns your handRecord actual finished weight to improve the next prediction.Record a castingUse an order's casting weightEnter manuallyORD-20261114-125352-032c / v1OR",
+      "model": false
+    },
+    {
+      "route": "demo",
+      "width": 360,
+      "title": "Speak the language of the shop",
+      "overflow": false,
+      "main": "Speak the language of the shopThe same streamed replies that Sakhi and Karigar send to Nonilion.New conversationSakhi is listeningTry an old-gold exchange, a budget or an impossibl",
+      "model": false
+    },
+    {
+      "route": "system",
+      "width": 360,
+      "title": "The workshop, at a glance",
+      "overflow": false,
+      "main": "The workshop, at a glanceService queue and the laptop worker. No hidden rendering dependency.Refresh statusOnlineBlender worker0Queued jobs0Running jobsBuild P0. The worker makes o",
+      "model": false
+    },
+    {
+      "interaction": "draft survives blur and two polling intervals",
+      "passed": true
+    },
+    {
+      "interaction": "viewer and disclosure survive two polling intervals",
+      "rotate": true,
+      "details": true
+    },
+    {
+      "interaction": "order search empty state",
+      "passed": true
+    },
+    {
+      "interaction": "catalogue to order",
+      "passed": true
+    },
+    {
+      "interaction": "viewer rotation, pause and reset",
+      "passed": true
+    },
+    {
+      "interaction": "phone navigation",
+      "passed": true
+    },
+    {
+      "interaction": "streamed chat",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

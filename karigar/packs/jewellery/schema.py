@@ -83,7 +83,7 @@ class Brief(BaseModel):
     metal: Metal = "yellow"
     old_gold: Optional[OldGold] = None
     target_weight_g: Optional[float] = Field(None, gt=0, le=500)   # finished weight
-    budget_inr: Optional[float] = Field(None, gt=0)
+    budget_inr: Optional[float] = Field(None, gt=0, le=10_000_000)
     gem: Gem = "none"
     gem_ct: Optional[float] = Field(None, gt=0, le=5)
     # Canonical ring size is the inner diameter. `ring_size` (Indian, 1-30) converts through
@@ -114,6 +114,11 @@ class Brief(BaseModel):
         if (isinstance(data, dict) and data.get("ring_size") is not None
                 and data.get("ring_inner_d_mm") is None):
             size = data["ring_size"]
+            if isinstance(size, str):
+                try:
+                    size = float(size)
+                except ValueError:
+                    pass
             if isinstance(size, (int, float)) and 1 <= size <= 30 and float(size).is_integer():
                 data = {**data, "ring_inner_d_mm": sizes.ring_inner_d_mm(int(size))}
         return data

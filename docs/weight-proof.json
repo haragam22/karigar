@@ -1,0 +1,50 @@
+{
+  "measurements": [
+    {
+      "shape": "Flat-profile band, inner 15 mm",
+      "mesh_mm3": 224.16674874587292,
+      "formula_mm3": 224.82160857920178,
+      "error_pct": 0.2912797561886307,
+      "formula": "Pappus: 2\u03c0R \u00d7 4ab \u0393(7/6)\u00b2 / \u0393(4/3)"
+    },
+    {
+      "shape": "Flat-profile band, inner 18 mm",
+      "mesh_mm3": 483.05299415334787,
+      "formula_mm3": 484.46407235922265,
+      "error_pct": 0.29126581028045656,
+      "formula": "Pappus: 2\u03c0R \u00d7 4ab \u0393(7/6)\u00b2 / \u0393(4/3)"
+    },
+    {
+      "shape": "Flat-profile band, inner 22 mm",
+      "mesh_mm3": 924.593699474848,
+      "formula_mm3": 927.2945135000746,
+      "error_pct": 0.29125741454377324,
+      "formula": "Pappus: 2\u03c0R \u00d7 4ab \u0393(7/6)\u00b2 / \u0393(4/3)"
+    },
+    {
+      "shape": "Disc, radius 10 mm, thickness 1.2 mm",
+      "mesh_mm3": 376.9532822152954,
+      "formula_mm3": 376.9911184307752,
+      "error_pct": 0.010036367869163263,
+      "formula": "\u03c0r\u00b2h"
+    },
+    {
+      "shape": "Round wire ring, major radius 10 mm, wire radius 1 mm",
+      "mesh_mm3": 197.29303005929327,
+      "formula_mm3": 197.39208802178717,
+      "error_pct": 0.05018335004540208,
+      "formula": "2\u03c0\u00b2Rr\u00b2"
+    }
+  ],
+  "calibration": {
+    "label": "Synthetic demonstration, not real casting evidence",
+    "before_loss_pct": 3.0,
+    "after_loss_pct": 4.0000000000000036,
+    "next_10g_cast_finished_prediction_g": 9.6,
+    "tolerance": {
+      "pct": 0.5,
+      "assumed": false,
+      "source": "2\u03c3 of the loss over 3 cast pieces (\u03c3 0.20%, floor 0.5%)"
+    }
+  }
+}

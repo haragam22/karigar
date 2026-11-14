@@ -97,3 +97,12 @@ Two processes: the **service** (Render; stdlib only: `karigar/service/{http,core
   - Any failure → None → caller uses its deterministic path (`brief._regex_parse`, `designer.fallback`). Brief JSON that fails validation gets one repair call first.
 - Nonilion: no Bot API exists yet. `NonilionTransport` stays a stub; Nonilion reaches Karigar as an imported OpenAI-compatible service: agents imported under "Other" at `https://<app>.onrender.com/sakhi/v1` and `/karigar/v1` (Phase 7 service).
 - Render (Phase 7): hosts the service (`render.yaml`); the worker polls it over HTTPS.
+
+
+## Owner console (2026-11-14)
+
+`/console/` serves the local UI and vendored fonts/viewer; its shell contains no private data. Distinct owner-token authentication protects `/api/console`, `/api/console/actions`, `/api/console/chat`, and `/api/console/jobs/<id>/seen`.
+
+`console.snapshot` aggregates uploaded worker results and every version into the read model. Counter questions can be acknowledged as displayed before the next answer is enqueued; pending conversation rows merge into the completed order. Shop/catalogue/refresh/calibration actions enter the same queue as `kind=owner`; `service/shop.py` executes them only on the worker. All catalogue geometry, weights and order prompts are supplied by code on that worker. No Blender or pricing dependency was added to the thin service.
+
+Worker progress refreshes online status, and a30second background heartbeat preserves leases through blocking renders. Browser polling ignores unchanged data and preserves fields, open disclosures, and camera/rotation state when content changes.

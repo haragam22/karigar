@@ -382,3 +382,15 @@ Append-only. Newest at bottom. Entries dated 2026-11-11 marked "existing" record
 - **Decision**: After Phase 7: Phase 9 packaging (README first) → Phase 10 web console → then the full testing sweep (full suite + reviewer per phase). Phase 10 is designed with the `impeccable` skill and includes a 3D viewer: the worker exports a GLB per design from Blender (bpy `export_scene.gltf`) next to the STL; the console loads it in a browser viewer (a CDN viewer library — new dependency, approved by the user's request).
 - **Why**: User priority; a rotatable 3D design is the strongest demo moment.
 - **Alternatives**: Static renders only.
+
+
+## 2026-11-14 — Native runtime, local completion and ownership
+
+- User authorized completion through phases1–10, including remaining tests, with Claude-specific workflow adapted to this environment. Later confirmed no deployment exists and requested the local build plus deployment guide.
+- Native macOS arm64 Python3.13.5 has no bpy5.0.1 wheel. Installed and verified bpy5.3.0, pinned it for reproducibility, and replaced the absolute WSL test command with scripts/test.sh. The full baseline passed1098 tests without changing golden volumes.
+- User requested both Impeccable and Hallmark and a bold, clear hackathon frontend. Implemented an object-led showroom workbench in the pinned palette, served by the existing stdlib service. Viewer and fonts are locally vendored; no CDN is needed during the demo.
+- Shop operations remain on the worker; the service imports no Blender/pricing engine. Owner data and actions require a distinct owner token. The anonymous Nonilion path still cannot set rates.
+- Input budget ceiling ₹1 crore and2,000character intake cap are operational guards. Conflicting/fractional size text asks again; explicit trusted-code Brief diameter overrides remain a backward-compatible constructor feature, while model drafts reject conflicting size/diameter pairs.
+- The1000-user simulation explicitly covers intake/authorization/queue idempotency, not1000 simultaneous renders. No physical castings or external deployment are inferred from it.
+- Git: user asked never to commit/push using an assistant identity. Changes remain uncommitted and unpushed. If a later commit is requested, use the user’s configured identity and no AI co-author attribution.
+- Existing small-ornament0.6mm policy remains assumed pending QUESTIONS.md; no geometry wall policy was silently changed.

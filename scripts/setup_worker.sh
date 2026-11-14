@@ -16,11 +16,12 @@ say() { printf '\n== %s\n' "$*"; }
 # 1. Python + venv with bpy (requirements.txt pins bpy; bpy 5.x needs Python 3.11/3.13 per wheel).
 PY="${KARIGAR_PYTHON:-}"
 if [ -z "$PY" ]; then
-  for c in python3.13 python3.11 python3; do
+  for c in python3.13 python3; do
     if command -v "$c" >/dev/null 2>&1; then PY="$c"; break; fi
   done
 fi
 [ -n "$PY" ] || { echo "No python3 found. Install it: sudo apt-get install -y python3 python3-venv"; exit 1; }
+"$PY" -c 'import sys; assert sys.version_info[:2] == (3, 13), "Use Python 3.13 for the pinned bpy wheel"'
 if [ ! -x venv/bin/python ]; then
   say "Creating venv with $PY"
   "$PY" -m venv venv || { echo "venv failed. Try: sudo apt-get install -y python3-venv"; exit 1; }
