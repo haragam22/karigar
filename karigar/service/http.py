@@ -458,7 +458,12 @@ def main() -> int:
     e = os.environ.get
     key, wtok = e("KARIGAR_API_KEY", ""), e("KARIGAR_WORKER_TOKEN", "")
     if not key or not wtok:
-        print("Set KARIGAR_API_KEY and KARIGAR_WORKER_TOKEN; refusing to start an open service.",
+        missing = [n for n, v in (("KARIGAR_API_KEY", key), ("KARIGAR_WORKER_TOKEN", wtok)) if not v]
+        # Names only, never values: shows a typo, stray space or wrong case in the host's settings.
+        seen = sorted(repr(n) for n in os.environ if "KARIGAR" in n.upper() or "PROBE" in n.upper())
+        print("Set KARIGAR_API_KEY and KARIGAR_WORKER_TOKEN; refusing to start an open service.\n"
+              f"Missing or empty: {', '.join(missing)}. "
+              f"Similar variable names present: {', '.join(seen) or 'none'}.",
               file=sys.stderr)
         return 2
     port = int(e("PORT", "8080"))

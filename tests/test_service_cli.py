@@ -42,6 +42,18 @@ def test_python_m_karigar_service_refuses_open_start(tmp_path):
     assert r.returncode == 2 and "refusing" in r.stderr
 
 
+def test_service_refusal_names_the_missing_secret_and_near_misses_but_no_values(tmp_path):
+    """A typo'd name (trailing space, wrong case) is listed by name; secret values never print."""
+    env = {"PATH": "/usr/bin:/bin", "KARIGAR_SERVICE_DIR": str(tmp_path / "s"),
+           "KARIGAR_WORKER_TOKEN": "w-secret-value", "KARIGAR_API_KEY ": "k-secret-value"}
+    r = subprocess.run([sys.executable, "-m", "karigar.service"], cwd=ROOT, env=env,
+                       capture_output=True, text=True, timeout=60)
+    assert r.returncode == 2
+    assert "Missing or empty: KARIGAR_API_KEY." in r.stderr
+    assert "'KARIGAR_API_KEY '" in r.stderr
+    assert "secret-value" not in r.stderr
+
+
 def test_setup_worker_script_is_valid_bash_and_installs_the_three_parts():
     p = ROOT / "scripts" / "setup_worker.sh"
     r = subprocess.run(["bash", "-n", str(p)], capture_output=True, text=True)

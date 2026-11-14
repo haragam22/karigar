@@ -382,3 +382,8 @@ Append-only. Newest at bottom. Entries dated 2026-11-11 marked "existing" record
 - **Decision**: After Phase 7: Phase 9 packaging (README first) → Phase 10 web console → then the full testing sweep (full suite + reviewer per phase). Phase 10 is designed with the `impeccable` skill and includes a 3D viewer: the worker exports a GLB per design from Blender (bpy `export_scene.gltf`) next to the STL; the console loads it in a browser viewer (a CDN viewer library — new dependency, approved by the user's request).
 - **Why**: User priority; a rotatable 3D design is the strongest demo moment.
 - **Alternatives**: Static renders only.
+
+## 2026-11-15: service startup refusal names the missing secret
+- **Decision:** when `KARIGAR_API_KEY` or `KARIGAR_WORKER_TOKEN` is missing or empty, `python -m karigar.service` prints which one is missing, plus the names (in `repr`, so stray spaces show) of any env vars containing KARIGAR/PROBE. It never prints values.
+- **Why:** the Render deploy kept exiting with the bare refusal after the user said both secrets were set; the host's variable names could not be seen from the log.
+- **Alternatives:** print nothing more (undebuggable on a host); print values (leaks secrets).
